@@ -1,0 +1,104 @@
+import React, { useState } from "react";
+import { VStack, HStack, Box, Button, Text, useToast, Flex, Spacer, Heading, Container } from "@chakra-ui/react";
+import { FaTimes, FaRegCircle } from "react-icons/fa";
+
+const Index = () => {
+  const toast = useToast();
+  const emptyBoard = Array(9).fill(null);
+  const [board, setBoard] = useState(emptyBoard);
+  const [isXNext, setIsXNext] = useState(true);
+  const [gameOver, setGameOver] = useState(false);
+
+  const winner = calculateWinner(board);
+
+  function calculateWinner(squares) {
+    const lines = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+    for (let i = 0; i < lines.length; i++) {
+      const [a, b, c] = lines[i];
+      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+        return squares[a];
+      }
+    }
+    return null;
+  }
+
+  const handleClick = (index) => {
+    if (winner || board[index]) return;
+    const newBoard = board.slice();
+    newBoard[index] = isXNext ? "X" : "O";
+    setBoard(newBoard);
+    setIsXNext(!isXNext);
+
+    if (!newBoard.includes(null)) {
+      setGameOver(true);
+      return;
+    }
+
+    if (!isXNext) {
+      aiMove(newBoard);
+    }
+  };
+
+  const aiMove = (newBoard) => {
+    let availableMoves = newBoard.map((item, index) => (item === null ? index : null)).filter((item) => item !== null);
+    let aiMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+    if (aiMove !== undefined) {
+      newBoard[aiMove] = "O";
+      setBoard(newBoard);
+      setIsXNext(true);
+    }
+    if (!newBoard.includes(null) || calculateWinner(newBoard)) {
+      setGameOver(true);
+    }
+  };
+
+  const handleReset = () => {
+    setBoard(emptyBoard);
+    setIsXNext(true);
+    setGameOver(false);
+  };
+
+  return (
+    <Container centerContent>
+      <VStack spacing={4} mt={8}>
+        <Heading as="h1" size="xl">
+          Tic Tac Toe
+        </Heading>
+        <Box>
+          {winner ? (
+            toast({
+              title: `${winner} wins!`,
+              status: "success",
+              duration: 3000,
+              isClosable: true,
+            })
+          ) : (
+            <Text fontSize="xl">{`Next player: ${isXNext ? "X" : "O"}`}</Text>
+          )}
+        </Box>
+        <Flex wrap="wrap" w="300px" h="300px" maxW="90vw" maxH="90vw">
+          {board.map((cell, index) => (
+            <Box key={index} w="33.33%" h="33.33%" d="flex" alignItems="center" justifyContent="center" border="1px" borderColor="gray.200" onClick={() => handleClick(index)}>
+              {cell === "X" && <FaTimes size="40px" />}
+              {cell === "O" && <FaRegCircle size="40px" />}
+            </Box>
+          ))}
+        </Flex>
+        <Button colorScheme="blue" onClick={handleReset} disabled={!gameOver}>
+          New Game
+        </Button>
+      </VStack>
+    </Container>
+  );
+};
+
+export default Index;
